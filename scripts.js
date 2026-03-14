@@ -56,14 +56,24 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Animate skill bars on scroll
     animateSkillsOnScroll();
+
+    // Add current year to footer
+    const yearSpan = document.querySelector('.current-year');
+    if (yearSpan) {
+        yearSpan.textContent = new Date().getFullYear();
+    }
+
+    console.log('Portfolio website loaded successfully!');
 });
 
 // Mobile Menu Toggle
-hamburger.addEventListener('click', () => {
-    hamburger.classList.toggle('active');
-    mobileMenu.classList.toggle('active');
-    document.body.style.overflow = mobileMenu.classList.contains('active') ? 'hidden' : 'auto';
-});
+if (hamburger) {
+    hamburger.addEventListener('click', () => {
+        hamburger.classList.toggle('active');
+        mobileMenu.classList.toggle('active');
+        document.body.style.overflow = mobileMenu.classList.contains('active') ? 'hidden' : 'auto';
+    });
+}
 
 // Close mobile menu when clicking on a link
 navLinks.forEach(link => {
@@ -144,60 +154,84 @@ window.addEventListener('scroll', () => {
     }
 });
 
-backToTopButton.addEventListener('click', () => {
-    window.scrollTo({
-        top: 0,
-        behavior: 'smooth'
+if (backToTopButton) {
+    backToTopButton.addEventListener('click', () => {
+        window.scrollTo({
+            top: 0,
+            behavior: 'smooth'
+        });
     });
-});
+}
 
-// Contact Form Submission
-contactForm.addEventListener('submit', (e) => {
-    e.preventDefault();
-    
-    // Get form values
-    const name = contactForm.querySelector('input[type="text"]').value;
-    const email = contactForm.querySelector('input[type="email"]').value;
-    const subject = contactForm.querySelector('input[placeholder="Subject"]').value;
-    const message = contactForm.querySelector('textarea').value;
-    
-    // Simple validation
-    if (!name || !email || !subject || !message) {
-        alert('Please fill in all fields');
-        return;
-    }
-    
-    // Email validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-        alert('Please enter a valid email address');
-        return;
-    }
-    
-    // In a real application, you would send this data to a server
-    console.log('Contact Form Submitted:', { name, email, subject, message });
-    
-    // Show success modal
-    successModal.classList.add('active');
-    document.body.style.overflow = 'hidden';
-    
-    // Reset form
-    contactForm.reset();
-});
+// -------------------- Formspree Contact Form Submission --------------------
+if (contactForm) {
+    contactForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
 
-// Close Modal
-closeModalButton.addEventListener('click', () => {
-    successModal.classList.remove('active');
-    document.body.style.overflow = 'auto';
-});
+        // ---- Validation (same as before) ----
+        const name = contactForm.querySelector('input[type="text"]').value;
+        const email = contactForm.querySelector('input[type="email"]').value;
+        const subject = contactForm.querySelector('input[placeholder="Subject"]').value;
+        const message = contactForm.querySelector('textarea').value;
 
-// Close modal when clicking outside
-successModal.addEventListener('click', (e) => {
-    if (e.target === successModal) {
+        if (!name || !email || !subject || !message) {
+            alert('Please fill in all fields');
+            return;
+        }
+
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            alert('Please enter a valid email address');
+            return;
+        }
+        // ----------------------------------------------------------------
+
+        // Prepare data for Formspree
+        const formData = new FormData(contactForm);
+        const data = Object.fromEntries(formData.entries());
+
+        try {
+            const response = await fetch(contactForm.action, {
+                method: 'POST',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            });
+
+            if (response.ok) {
+                // Show success modal (using your existing 'active' class)
+                successModal.classList.add('active');
+                document.body.style.overflow = 'hidden';
+                contactForm.reset(); // Clear form
+            } else {
+                const errorData = await response.json();
+                alert(`Error: ${errorData.error || 'Something went wrong'}`);
+            }
+        } catch (error) {
+            alert('Network error – please try again later.');
+        }
+    });
+}
+
+// Close modal (your existing close button logic)
+if (closeModalButton) {
+    closeModalButton.addEventListener('click', () => {
         successModal.classList.remove('active');
         document.body.style.overflow = 'auto';
-    }
-});
+    });
+}
+
+// Close modal when clicking outside
+if (successModal) {
+    successModal.addEventListener('click', (e) => {
+        if (e.target === successModal) {
+            successModal.classList.remove('active');
+            document.body.style.overflow = 'auto';
+        }
+    });
+}
 
 // Smooth scrolling for anchor links
 document.querySelectorAll('a[href^="#"]').forEach(anchor => {
@@ -231,7 +265,7 @@ function animateOnScroll() {
     });
 }
 
-// Add CSS animation
+// Add CSS animation (if not already present)
 const style = document.createElement('style');
 style.textContent = `
     .skill-category, .project-card, .contact-card, .timeline-content {
@@ -272,14 +306,3 @@ if (newsletterForm) {
         emailInput.value = '';
     });
 }
-
-// Initialize on page load
-document.addEventListener('DOMContentLoaded', () => {
-    console.log('Portfolio website loaded successfully!');
-    
-    // Add current year to footer
-    const yearSpan = document.querySelector('.current-year');
-    if (yearSpan) {
-        yearSpan.textContent = new Date().getFullYear();
-    }
-});
